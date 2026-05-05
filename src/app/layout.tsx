@@ -1,9 +1,23 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { JsonLd } from "@/components/JsonLd";
 import { siteConfig } from "@/lib/site";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
+
+/**
+ * Indexation toggle.
+ *
+ * - `NEXT_PUBLIC_ALLOW_INDEXING=true` → index, follow (production réelle)
+ * - sinon → noindex, nofollow (par défaut, évite que Google indexe la
+ *   preview *.vercel.app avant que le domaine définitif soit branché)
+ *
+ * À activer dans Vercel (Settings → Environment Variables) UNIQUEMENT
+ * quand le domaine custom (ex: thermo-nord.fr) est branché.
+ */
+const allowIndexing = process.env.NEXT_PUBLIC_ALLOW_INDEXING === "true";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,17 +65,24 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: ["/og-default.png"],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
+  robots: allowIndexing
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+          "max-video-preview": -1,
+        },
+      }
+    : {
+        index: false,
+        follow: false,
+        nocache: true,
+        googleBot: { index: false, follow: false },
+      },
   icons: {
     icon: "/favicon.ico",
   },
@@ -87,6 +108,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white text-zinc-900">
         {children}
         <JsonLd data={[localBusinessJsonLd(), websiteJsonLd()]} />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
