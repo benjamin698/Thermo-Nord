@@ -1,0 +1,86 @@
+---
+description: Standards SEO (Google) et GEO (LLM ChatGPT/Perplexity/Claude/Gemini) pour Thermo Nord
+alwaysApply: true
+---
+
+# SEO + GEO — règles obligatoires
+
+Tout contenu publié doit être optimisé à la fois pour les moteurs de recherche
+classiques (Google, Bing) et pour les moteurs génératifs (ChatGPT, Perplexity,
+Claude, Gemini).
+
+## Règles non négociables
+
+1. **Langue** : le site est en **français**. Toujours `<html lang="fr">` dans le layout racine.
+2. **Rendu serveur uniquement** par défaut. Pas de `"use client"` sur une page sauf interactivité indispensable.
+3. **Une seule `<h1>` par page**, hiérarchie `h2` → `h3` cohérente, jamais de saut de niveau.
+4. **Métadonnées Next.js** via `export const metadata` ou `generateMetadata` sur **chaque** page :
+   - `title` (50-60 caractères, mot-clé principal en premier)
+   - `description` (140-160 caractères, accroche + CTA implicite)
+   - `alternates.canonical` (URL absolue)
+   - `openGraph` complet (`title`, `description`, `url`, `siteName`, `locale: "fr_FR"`, `type`, `images`)
+   - `twitter` (`card: "summary_large_image"`)
+5. **JSON-LD Schema.org** obligatoire sur chaque page via `<script type="application/ld+json">` :
+   - Page d'accueil : `Organization` + `WebSite` (avec `SearchAction`)
+   - Article de blog : `Article` ou `BlogPosting`
+   - Page service/produit : `Service` ou `Product`
+   - Page FAQ : `FAQPage`
+   - Toutes les pages : `BreadcrumbList`
+6. **Images** : `next/image` toujours, avec `alt` descriptif (jamais vide sauf décoratif), formats AVIF/WebP, `priority` uniquement sur la LCP.
+7. **URLs** : kebab-case, courtes, signifiantes (`/services/pompe-a-chaleur` pas `/p?id=42`).
+8. **Liens internes** : maillage entre pages liées, ancres descriptives (jamais "cliquez ici").
+9. **Performance** (Core Web Vitals) : LCP < 2,5s, CLS < 0,1, INP < 200ms.
+
+## Spécificités GEO (souvent oubliées)
+
+1. **Réponse directe en haut de page** : ouvrir chaque article par un résumé de 2-3 phrases qui répond à la question avant le détail. Les LLM extraient ces blocs en priorité.
+2. **Structure en chunks autonomes** : sections de 200-400 mots avec titre clair, pour qu'un LLM puisse citer une section sans contexte.
+3. **Listes, tableaux, définitions** : préférer ces formats au texte continu pour les contenus factuels (les LLM les "comprennent" mieux).
+4. **Sources et citations** : citer des sources externes crédibles (ADEME, normes, fabricants) avec lien — augmente fortement la probabilité d'être cité par les LLM.
+5. **FAQ Schema obligatoire** sur les pages contenant des questions/réponses.
+6. **`llms.txt` à la racine** : maintenir `public/llms.txt` à jour à chaque ajout de page importante.
+7. **Bots IA autorisés** dans `robots.ts` : `GPTBot`, `PerplexityBot`, `ClaudeBot`, `Google-Extended`, `OAI-SearchBot`, `anthropic-ai`. Ne jamais les bloquer si on veut être cité.
+8. **Données factuelles vérifiables** : chiffres, dates, normes citées explicitement (ex : "norme RE2020", "crédit d'impôt MaPrimeRénov' 2026").
+
+## Exemple — page de service correctement structurée
+
+```tsx
+// src/app/services/pompe-a-chaleur/page.tsx
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Installation pompe à chaleur dans le Nord | Thermo Nord",
+  description: "Installation et maintenance de pompes à chaleur air/eau et air/air dans le Nord. Devis gratuit, certifié RGE, éligible MaPrimeRénov'.",
+  alternates: { canonical: "https://thermo-nord.fr/services/pompe-a-chaleur" },
+  openGraph: { /* ... */ },
+};
+
+export default function Page() {
+  return (
+    <article>
+      <h1>Installation de pompe à chaleur dans le Nord</h1>
+      <p className="lead">
+        Thermo Nord installe et entretient des pompes à chaleur air/eau et air/air
+        dans tout le département du Nord. Certifié RGE QualiPAC, devis gratuit
+        sous 48h, travaux éligibles à MaPrimeRénov'.
+      </p>
+      <h2>Types de pompes à chaleur installées</h2>
+      {/* Liste structurée */}
+      <h2>Aides financières en 2026</h2>
+      {/* Tableau */}
+      <h2>Questions fréquentes</h2>
+      {/* FAQ avec JSON-LD FAQPage */}
+    </article>
+  );
+}
+```
+
+## Anti-patterns interdits
+
+- `<div>` à la place de `<section>`, `<article>`, `<nav>`, `<main>`, `<footer>`
+- `<h1>` multiples ou absent
+- Métadonnées génériques copiées entre pages
+- Images sans `alt`, ou `alt` non descriptif (`alt="image"`)
+- Liens "cliquez ici" / "en savoir plus" sans contexte
+- Contenu chargé en JavaScript côté client sans fallback SSR
+- Bloquer les bots IA dans `robots.ts`
